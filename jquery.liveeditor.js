@@ -13,6 +13,8 @@
 
         debug: false,
 
+        changedCss: 'liveeditor-changed',
+
         editor: {
             css: ''
         },
@@ -98,11 +100,11 @@
         /// Forces the open editor to save its changes back to its container and close.
         /// Call this method before saving to make sure all changes have been committed.
         ///
-        closeEditor: function (container) {
-            debug("jQuery.liveeditor.closeEditor(container)");
-            //if (container || null === null)
-            //    container = $(options.editor._focusedContainer);
-            return commitEditor(container);
+        closeEditor: function (selector) {
+            debug("jQuery.liveeditor.closeEditor(selector)");
+            selector.each(function () { commitEditor(this); });
+            return selector;
+            
         },
 
         ///
@@ -129,8 +131,10 @@
         ///
         reset: function (container) {
             debug("jQuery.liveeditor.reset(container)");
-            container.removeClass('changed');
+            var options = container.data('liveeditor-options');
             container.data('liveeditor-old', undefined);
+            if (options.changedCss)
+                container.removeClass(options.changedCss);
             containerChanged(container);
             return container;
         }
@@ -158,7 +162,7 @@
         var editor = $(this)
             .unbind('focus', editor_focus)
             .select();
-        var container = editor.closest('.liveedit')
+        var container = editor.parent()
             .unbind('mouseleave', container_mouseleave);
 
         var options = container.data('liveeditor-options');
@@ -169,7 +173,6 @@
 
         if (options.editor._focusedContainer) {
             debug('Closing old editing container.');
-            debug(options.editor._focusedContainer);
             if (!commitEditor(options.editor._focusedContainer))
                 return false;
         }
@@ -187,61 +190,53 @@
     //Handle editor TAB and ESC keys
     function editor_keydown(e) {
         var keyCode = e.keyCode || e.which;
-        if (keyCode == 27) {       // ESC
+        if (keyCode == 13) {        // Enter
             e.preventDefault();
-            var container = $(this).closest('.liveedit');
-            var options = container.data('liveeditor-options');
-            if (!options.editor._focusedContainer) {
-                debug("Got ESC keydown for an editor without having a current container. Aborting!");
-                return;
-            }
-            commitEditor(container);//options.editor._focusedContainer
+            var container = $(this).parent();
+            commitEditor(container);
+        }
+        else if (keyCode == 27) {       // ESC
+            e.preventDefault();
+            var container = $(this).parent();
+            commitEditor(container); //TODO: Change to cancelEditor(container);
         }
         else if (keyCode == 9) {    //TAB
             e.preventDefault();
-            var container = $(this).closest('.liveedit');
+            var container = $(this).parent();
             var options = container.data('liveeditor-options');
-            if (!options.editor._focusedContainer) {
-                debug("Got TAB keydown for an editor without having a current container. Aborting!");
-                return;
-            }
 
             //Close the current editor
-            var nextContainer = container;//options.editor._focusedContainer; //TODO: Rewrite to use the initialized selector for stepping instead
-            commitEditor(container);//options.editor._focusedContainer
+            commitEditor(container);
 
-            do {
-                //Find previous/next editable container
-                debug("Selecting next container for editing.");
-                if (e.shiftKey) {
-                    debug("TAB to prev container");
-                    nextContainer = nextContainer.prevAll('.liveedit').eq(0);
-                    if (nextContainer.length == 0) {
-                        debug("Found no prev container. Moving to parents previous last");
-                        nextContainer = $('.liveedit:last', nextContainer.parent().prev());
+            if (e.shiftKey) {
+                //Find the previous element in the initialized selector
+                debug("TAB to prev container");
+                var nextContainer = options._selector.last(); //Used only if we are at the first element in the selector
+                options._selector.each(function () {
+                    if (this === container[0])
+                        return false;
+                    nextContainer = $(this);
+                });
+            } else {
+                //Find the next element in the initialized selector
+                debug("TAB to next container");
+                var found = false;
+                nextContainer = options._selector.eq(0);//Used only if we are at the last element in the selector
+                options._selector.each(function () {
+                    if (found) {
+                        //This is the next element in the selector
+                        nextContainer = $(this);
+                        return false;
                     }
-                } else {
-                    debug("TAB to next container");
-                    nextContainer = $("~ .liveedit", nextContainer).eq(0);
-                    if (nextContainer.length == 0) {
-                        debug("Found no next container. Moving to parents next first");
-                        nextContainer = $('.liveedit:first', nextContainer.parent().next());
+                    else if (this === container[0]) {
+                        //This is the current element in the selector
+                        found = true;
                     }
-                }
-                //Open the editor
-                if (nextContainer.length > 0) {
-                    try {
-                        displayEditor(nextContainer).focus();
-                        break;
-                    } catch (e) {
-                        debug("Failed to display editor. Move to the next container.");
-                    }
-                }
-                else {
-                    debug("No more containers to test. Not displaying any new editor.");
-                    break;
-                }
-            } while (true);//Iterate through all editing containers until we find one that can be edited now
+                });
+            }
+
+            //Open the new editor
+            displayEditor(nextContainer).focus();
         }
     }
 
@@ -261,17 +256,17 @@
             console.log(msg);
     }
     function enable(container) {
-        if (!container.hasClass('liveedit')) {
+        if (container.data('liveeditor-enabled') !== true) {
             container
-                .addClass('liveedit')
+                .data('liveeditor-enabled', true)
                 .mouseenter(container_mouseenter);
         }
         return container;
     }
     function disable(container) {
-        if (container.hasClass('liveedit')) {
+        if (container.data('liveeditor-enabled') === true) {
             container
-                .removeClass('liveedit')
+                .data('liveeditor-enabled', false)
                 .unbind('mouseenter', container_mouseenter);
         }
         return container;
@@ -343,13 +338,15 @@
 
         //Update the containers change-status
         if (newValue != oldValue) {
-            container.addClass('changed');
-            debug("Flagged the container as changed");
+            debug("The container is changed");
+            if (options.changedCss)
+                container.addClass(options.changedCss);
         }
         else {
-            container.removeClass('changed');
+            debug("The container is unchanged");
             container.data('liveeditor-old', undefined);
-            debug("Flagged the container as unchanged");
+            if (options.changedCss)
+                container.removeClass(options.changedCss);
         }
         return true;
     }
@@ -469,7 +466,7 @@
     function getEditorValue(editor) {
         debug('liveeditor.getEditorValue()');
         var value;
-        var container = editor.closest('.liveedit');
+        var container = editor.parent();
         var options = container.data('liveeditor-options');
 
         if ($.isFunction(options.onEditorGetValue)) {
@@ -500,7 +497,7 @@
     function getEditorHtml (editor) {
         debug('liveeditor.getEditorHtml()');
         var html;
-        var container = editor.closest('.liveedit');
+        var container = editor.parent();
         var options = container.data('liveeditor-options');
 
         if ($.isFunction(options.onEditorGetValue)) {
@@ -544,7 +541,10 @@
 
         //Build options for the new instance
         var mergedOptions = $.extend({}, defaultOptions, options)
-        mergedOptions.editor._focusedContainer = null; //This is just an internal state-variable, so DON'T expose it in defaultOptions!
+        //This is just an internal state-variable, so DON'T expose it in defaultOptions!
+        mergedOptions.editor._focusedContainer = null;
+        mergedOptions._selector = this;
+
         //Initialize all objects in the selection
         this.each(function () {
             initializeObject(this, mergedOptions);
