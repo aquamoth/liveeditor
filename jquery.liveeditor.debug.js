@@ -10,6 +10,8 @@
 
     var defaultOptions = {
 
+        debug: false,
+
         changedCss: 'liveeditor-changed',
         editorCss: null,
 
@@ -76,6 +78,7 @@
         /// Enables editing for an unregistered or previously disabled container.
         ///
         enable: function (container) {
+            debug("jQuery.liveeditor.enable(container)");
             return enable(container);
         },
 
@@ -83,6 +86,7 @@
         /// Disables editing for a registered container.
         ///
         disable: function (container) {
+            debug("jQuery.liveeditor.disable(container)");
             return disable(container);
         },
 
@@ -91,6 +95,7 @@
         /// Call this method before saving to make sure all changes have been committed.
         ///
         closeEditor: function (selector) {
+            debug("jQuery.liveeditor.closeEditor(selector)");
             selector.each(function () { commitEditor(this); });
             return selector;
             
@@ -100,6 +105,7 @@
         /// Changes the value of a container as if the user had edited it with the editor.
         ///
         set: function (container, value, html) {
+            debug("jQuery.liveeditor.set(container, value, html)");
             var originalValue = getContainerValue(container);
             if (container.data('liveeditor-old') === undefined) {
                 container.data('liveeditor-old', originalValue);
@@ -118,6 +124,7 @@
         /// Call this method for all containers after saving to setup new change-tracking without reloading the entire page.
         ///
         reset: function (container) {
+            debug("jQuery.liveeditor.reset(container)");
             var options = container.data('liveeditor-options');
             container.data('liveeditor-old', undefined);
             if (options.changedCss)
@@ -133,15 +140,19 @@
 
     //Display the editor when the user hovers over the container
     function container_mouseenter() {
+        debug("liveeditor.container_mouseenter()");
         displayEditor($(this));
     }
 
     function container_mouseleave() {
+        debug("liveeditor.container_mouseleave()");
         commitEditor(this);//TODO: Should call cancelEditor() instead to make sure the value doesn't change
     }
 
     //Make the editor "sticky" when focused so it doesn't disappear when the mouse is moved from the container
     function editor_focus() {
+        debug('liveeditor.editor_focus()');
+
         var editor = $(this)
             .unbind('focus', editor_focus)
             .select();
@@ -150,17 +161,21 @@
 
         var options = container.data('liveeditor-options');
         if (container[0] === options._focusedContainer) {
+            debug('It is the current editing container that got focus. Ignore?!');
             return true; //Since the current containers editor is focused there is no other editor to close
         }
 
         if (options._focusedContainer) {
+            debug('Closing old editing container.');
             if (!commitEditor(options._focusedContainer))
                 return false;
         }
 
+        debug('Tracking the current editing container.');
         options._focusedContainer = container[0];
         editor.keydown(editor_keydown);
         if ($.isFunction(options.onEditorFocused)) {
+            debug("Calling onEditorFocused()");
             options.onEditorFocused.call(container, editor);
         }
         return true;
@@ -189,6 +204,7 @@
 
             if (e.shiftKey) {
                 //Find the previous element in the initialized selector
+                debug("TAB to prev container");
                 var nextContainer = options._selector.last(); //Used only if we are at the first element in the selector
                 options._selector.each(function () {
                     if (this === container[0])
@@ -197,6 +213,7 @@
                 });
             } else {
                 //Find the next element in the initialized selector
+                debug("TAB to next container");
                 var found = false;
                 nextContainer = options._selector.eq(0);//Used only if we are at the last element in the selector
                 options._selector.each(function () {
@@ -228,6 +245,10 @@
     ///
     /// Private methods
     ///
+    function debug(msg) {
+        //if (settings.debug && console)
+            console.log(msg);
+    }
     function enable(container) {
         if (container.data('liveeditor-enabled') !== true) {
             container
@@ -254,13 +275,16 @@
         var value;
         var options = container.data('liveeditor-options');
         if ($.isFunction(options.onGetValue)) {
+            debug('Calling onGetValue()');
             value = options.onGetValue.call(container);
         }
         if (!value) {
+            debug('Looking up value from container');
             value = container.hasClass(options.combobox.css) || container.hasClass(options.checkbox.css) 
                 ? container.attr('value') 
                 : container.text(); 
         }
+        debug('getContainerValue() returns: ' + value);
         return value;
     }
 
@@ -270,6 +294,7 @@
     /// Returns true if the value was written successfully and false if the operation was cancelled.
     ///
     function updateContainer(container, newValue, newHtml) {
+        debug("liveeditor.updateContainer(container, newValue, newHtml)");
         var success;
 
         var oldValue = container.data('liveeditor-old');
@@ -277,6 +302,7 @@
         //Let the user override the setting of the value to the container if he likes
         var options = container.data('liveeditor-options');
         if ($.isFunction(options.onSetValue)) {
+            debug('Calling onSetValue()');
             var success = options.onSetValue.call(container, value, html);
             if (success === false)
                 return false;
@@ -284,6 +310,7 @@
 
         if (success === undefined) {
             //Set the new value to the container
+            debug('Setting value for container');
             if (container.hasClass(options.combobox.css)) {
                 container.attr('value', newValue);
             }
@@ -299,15 +326,18 @@
         container.unbind('mouseleave', container_mouseleave);
 
         if (container[0] === options._focusedContainer) {
+            debug("Closed the current editing container.");
             options._focusedContainer = null;
         }
 
         //Update the containers change-status
         if (newValue != oldValue) {
+            debug("The container is changed");
             if (options.changedCss)
                 container.addClass(options.changedCss);
         }
         else {
+            debug("The container is unchanged");
             container.data('liveeditor-old', undefined);
             if (options.changedCss)
                 container.removeClass(options.changedCss);
@@ -318,6 +348,7 @@
     function containerChanged (container) {
         var options = container.data('liveeditor-options');
         if ($.isFunction(options.onChanged)) {
+            debug("Calling onChanged()");
             options.onChanged.call(container);
         }
     }
@@ -330,10 +361,12 @@
 
     //Display editor when mouse hovers over an editable container
     function displayEditor(container) {
+        debug('liveeditor.displayEditor(container)');
         var options = container.data('liveeditor-options');
 
         var editor = container.children(0);
         if (editor.data('liveeditor-original')) {
+            debug("Using the existing editor for the requested container instead of creating a new.");
             return editor; //Already an editor in this container
         }
 
@@ -347,11 +380,14 @@
         container
             .html(editor)
             .mouseleave(container_mouseleave);
-        
+        debug("Added editor to the container");
+
         if ($.isFunction(options.onEditorOpened)) {
+            debug("Calling onEditorOpened");
             options.onEditorOpened.call(container, editor);
         }
 
+        debug("liveeditor.displayEditor() DONE");
         return editor;
     }
 
@@ -371,6 +407,7 @@
                 switch ($.type(select_options)) {
                     case "string": editor.append($(select_options)); break;
                     default:
+                        debug('appending ' + $.type(select_options) + ' options is not supported.');
                         break;
                 }
                 $('option[value="' + value + '"]', editor).prop('selected', true);
@@ -391,9 +428,11 @@
 
     //Restore "label" in the container with the new value from the editor
     function commitEditor(obj) {
+        debug("liveeditor.commitEditor(obj)");
         var container = $(obj);
         var editor = container.children(0);
         if (!editor.length) {
+            debug("Found no editor to hide for the requested container. Aborting!");
             return true; //No editor to hide
         }
         var originalValue = editor.data('liveeditor-original');
@@ -408,6 +447,7 @@
         }
         //Throw the hidden event
         if ($.isFunction(options.onEditorClosed)) {
+            debug("Calling onEditorClosed()");
             options.onEditorClosed.call(container);
         }
         return true;
@@ -418,15 +458,18 @@
     /// Returns the editors value, which MAY differ from its displayed text (for checkboxes/comboboxes for instance).
     ///
     function getEditorValue(editor) {
+        debug('liveeditor.getEditorValue()');
         var value;
         var container = editor.parent();
         var options = container.data('liveeditor-options');
 
         if ($.isFunction(options.onEditorGetValue)) {
+            debug('Calling onEditorGetValue()');
             value = options.onEditorGetValue.call(editor);
         }
 
         if (!value) {
+            debug('Getting editor value');
             if (editor.is(':checkbox'))
                 value = (editor.prop('checked')
                     ? options.checkbox.checked.value
@@ -437,6 +480,7 @@
                 value = editor.val();
         }
 
+        debug('liveeditor.getEditorValue() returns ' + value);
         return value;
     }
 
@@ -445,11 +489,13 @@
     /// Returns the displayed text in the editor, which MAY differ from its value (for checkboxes/comboboxes for instance).
     ///
     function getEditorHtml (editor) {
+        debug('liveeditor.getEditorHtml()');
         var html;
         var container = editor.parent();
         var options = container.data('liveeditor-options');
 
         if ($.isFunction(options.onEditorGetValue)) {
+            debug('Calling onEditorGetHtml()');
             html = options.onEditorGetHtml.call(editor);
         }
 
@@ -458,6 +504,7 @@
         else
             html = null;
 
+        debug('liveeditor.getEditorHtml() returns ' + html);
         return html;
     }
 
@@ -484,7 +531,8 @@
     ///
 
     $.fn.liveeditor = function (options) {
-        
+        debug("jQuery.liveeditor initializing for selection");
+
         //Build options for the new instance
         var mergedOptions = $.extend({}, defaultOptions, options)
         //This is just an internal state-variable, so DON'T expose it in defaultOptions!
@@ -496,11 +544,13 @@
             initializeObject(this, mergedOptions);
         });
         //Enable all objects in the selection
+        debug("Enabling selection");
         $.liveeditor.enable(this);
 
         //TODO: Consider iterating all items in the selector and updating their html if they are checkboxes or comboboxes, to make sure the server generated code isn't diffrent from client side
         //TODO: $('.combo,.checkbox', this).each(function(){ updateContainer(this, this.attr(value)); });
 
+        debug("jQuery.liveeditor initializing DONE");
         return this;
     }
 
