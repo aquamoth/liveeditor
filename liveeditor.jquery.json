@@ -1,18 +1,18 @@
-{
+ï»¿{
     "name": "liveeditor",
     "title": "jQuery LiveEditor",
     "description": "jQuery plugin that displays input editors when the user hovers over an editable control.",
     "keywords": [
         "editor"
     ],
-    "version": "0.1.0",
+    "version": "0.1.1",
     "author": {
-        "name": "Mattias Åslund",
-        "url": "https://github.com/aquamoth/liveeditor/0.1.0/AUTHORS.txt"
+        "name": "Mattias Ã…slund",
+        "url": "https://github.com/aquamoth/liveeditor/blob/0.1.1/AUTHORS.txt"
     },
     "maintainers": [
         {
-            "name": "Mattias Åslund",
+            "name": "Mattias Ã…slund",
             "email": "mattias@trustfall.se",
             "url": "http://trustfall.se"
         }
@@ -20,12 +20,12 @@
     "licenses": [
         {
             "type": "MIT",
-            "url": "https://github.com/aquamoth/liveeditor/0.1.0/LICENSE"
+            "url": "https://github.com/aquamoth/liveeditor/blob/0.1.1/LICENSE"
         }
     ],
-    "bugs": "https://github.com/aquamoth/liveeditor/issues.txt",
+    "bugs": "https://github.com/aquamoth/liveeditor/issues",
     "homepage": "https://github.com/aquamoth/liveeditor",
-    "docs": "https://github.com/aquamoth/liveeditor",
+    "docs": "https://github.com/aquamoth/liveeditor/wiki",
     "download": "http://code.jquery.com/#liveeditor",
     "dependencies": {
         "jquery": ">=1.5"

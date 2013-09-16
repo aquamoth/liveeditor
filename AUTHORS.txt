@@ -1,1 +1,1 @@
-LiveEditor is developed and maintained by Mattias �slund, mattias@trustfall.se.
+﻿LiveEditor is developed and maintained by Mattias Åslund, mattias@trustfall.se.
