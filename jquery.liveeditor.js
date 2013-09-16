@@ -111,8 +111,8 @@
         set: function (container, value, html) {
             debug("jQuery.liveeditor.set(container, value, html)");
             var originalValue = getContainerValue(container);
-            if (container.attr('liveold') === undefined) {
-                container.attr('liveold', originalValue);
+            if (container.data('liveeditor-old') === undefined) {
+                container.data('liveeditor-old', originalValue);
             }
             if (!updateContainer(container, value, html)) {
                 return false;
@@ -130,7 +130,7 @@
         reset: function (container) {
             debug("jQuery.liveeditor.reset(container)");
             container.removeClass('changed');
-            container.removeAttr('liveold');
+            container.data('liveeditor-old', undefined);
             containerChanged(container);
             return container;
         }
@@ -308,7 +308,7 @@
         debug("liveeditor.updateContainer(container, newValue, newHtml)");
         var success;
 
-        var oldValue = container.attr('liveold');
+        var oldValue = container.data('liveeditor-old');
 
         //Let the user override the setting of the value to the container if he likes
         var options = container.data('liveeditor-options');
@@ -348,7 +348,7 @@
         }
         else {
             container.removeClass('changed');
-            container.removeAttr('liveold');
+            container.data('liveeditor-old', undefined);
             debug("Flagged the container as unchanged");
         }
         return true;
@@ -380,14 +380,12 @@
         }
 
         var currentValue = getContainerValue(container);
-        if (container.attr('liveold') === undefined) {
-            container.attr('liveold', currentValue);
+        if (container.data('liveeditor-old') === undefined) {
+            container.data('liveeditor-old', currentValue);
         }
 
         var editor = createEditor(container, currentValue);
-        editor
-            .addClass('liveeditor')
-            .attr('original', currentValue);
+        editor.addClass('liveeditor').data('liveeditor-original', currentValue);
         editor.focus(editor_focus);
         container
             .html(editor)
@@ -446,7 +444,7 @@
             debug("Found no editor to hide for the requested container. Aborting!");
             return true; //No editor to hide
         }
-        var originalValue = editor.attr('original');
+        var originalValue = editor.data('liveeditor-original');
         var newValue = getEditorValue(editor);
         var newHtml = getEditorHtml(editor);
         if (!updateContainer(container, newValue, newHtml))
