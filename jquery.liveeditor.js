@@ -14,10 +14,7 @@
         debug: false,
 
         changedCss: 'liveeditor-changed',
-
-        editor: {
-            css: ''
-        },
+        editorCss: null,
 
         combobox: {
             css: 'combo'
@@ -46,8 +43,6 @@
         
         /// Called (after any edit has been closed) when the container has changed its value. Also called by reset().
         onChanged: null,
-
-
 
         /// Called when an editor is being created to allow developers to implement their own editors for certain containers.
         onEditorCreating: null,
@@ -166,19 +161,19 @@
             .unbind('mouseleave', container_mouseleave);
 
         var options = container.data('liveeditor-options');
-        if (container[0] === options.editor._focusedContainer) {
+        if (container[0] === options._focusedContainer) {
             debug('It is the current editing container that got focus. Ignore?!');
             return true; //Since the current containers editor is focused there is no other editor to close
         }
 
-        if (options.editor._focusedContainer) {
+        if (options._focusedContainer) {
             debug('Closing old editing container.');
-            if (!commitEditor(options.editor._focusedContainer))
+            if (!commitEditor(options._focusedContainer))
                 return false;
         }
 
         debug('Tracking the current editing container.');
-        options.editor._focusedContainer = container[0];
+        options._focusedContainer = container[0];
         editor.keydown(editor_keydown);
         if ($.isFunction(options.onEditorFocused)) {
             debug("Calling onEditorFocused()");
@@ -331,9 +326,9 @@
 
         container.unbind('mouseleave', container_mouseleave);
 
-        if (container[0] === options.editor._focusedContainer) {
+        if (container[0] === options._focusedContainer) {
             debug("Closed the current editing container.");
-            options.editor._focusedContainer = null;
+            options._focusedContainer = null;
         }
 
         //Update the containers change-status
@@ -425,8 +420,8 @@
         }
 
         editor.data('liveeditor-original', value);
-        if (options.editor.css) {
-            editor.addClass(options.editor.css);
+        if (options.editorCss) {
+            editor.addClass(options.editorCss);
         }
 
         return editor;
@@ -542,7 +537,7 @@
         //Build options for the new instance
         var mergedOptions = $.extend({}, defaultOptions, options)
         //This is just an internal state-variable, so DON'T expose it in defaultOptions!
-        mergedOptions.editor._focusedContainer = null;
+        mergedOptions._focusedContainer = null;
         mergedOptions._selector = this;
 
         //Initialize all objects in the selection
