@@ -258,7 +258,7 @@
     ///
     function debug(msg) {
         //if (settings.debug && console)
-        //    console.log(msg);
+            console.log(msg);
     }
     function enable(container) {
         if (!container.hasClass('liveedit')) {
@@ -373,8 +373,8 @@
         debug('liveeditor.displayEditor(container)');
         var options = container.data('liveeditor-options');
 
-        var editor = $('.liveeditor', container);
-        if (editor.length) {
+        var editor = container.children(0);
+        if (editor.data('liveeditor-original')) {
             debug("Using the existing editor for the requested container instead of creating a new.");
             return editor; //Already an editor in this container
         }
@@ -385,7 +385,6 @@
         }
 
         var editor = createEditor(container, currentValue);
-        editor.addClass('liveeditor').data('liveeditor-original', currentValue);
         editor.focus(editor_focus);
         container
             .html(editor)
@@ -428,6 +427,7 @@
             }
         }
 
+        editor.data('liveeditor-original', value);
         if (options.editor.css) {
             editor.addClass(options.editor.css);
         }
@@ -439,7 +439,7 @@
     function commitEditor(obj) {
         debug("liveeditor.commitEditor(obj)");
         var container = $(obj);
-        var editor = $('.liveeditor', container);
+        var editor = container.children(0);
         if (!editor.length) {
             debug("Found no editor to hide for the requested container. Aborting!");
             return true; //No editor to hide
