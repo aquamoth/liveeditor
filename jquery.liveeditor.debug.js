@@ -10,8 +10,6 @@
 
     var defaultOptions = {
 
-        debug: false,
-
         changedCss: 'liveeditor-changed',
         editorCss: null,
 
@@ -70,9 +68,6 @@
     ///
 
     $.liveeditor = {
-        //version: function () {
-        //    return "0.0.1";
-        //},
 
         ///
         /// Enables editing for an unregistered or previously disabled container.
@@ -104,33 +99,46 @@
         ///
         /// Changes the value of a container as if the user had edited it with the editor.
         ///
-        set: function (container, value, html) {
-            debug("jQuery.liveeditor.set(container, value, html)");
-            var originalValue = getContainerValue(container);
-            if (container.data('liveeditor-old') === undefined) {
-                container.data('liveeditor-old', originalValue);
-            }
-            if (!updateContainer(container, value, html)) {
-                return false;
-            }
-            if (value !== originalValue) {
-                containerChanged(container);
-            }
-            return true;
+        set: function (selector, value, html) {
+            debug("jQuery.liveeditor.set(selection, value, html)");
+            selector.each(function () {
+                var container = $(this);
+                var originalValue = getContainerValue(container);
+                if (container.data('liveeditor-old') === undefined) {
+                    container.data('liveeditor-old', originalValue);
+                    debug("Set liveeditor-old to:", originalValue);
+                }
+                if (updateContainer(container, value, html)) {
+                    if (value !== originalValue) {
+                        containerChanged(container);
+                    }
+                }
+            });
+            return selector;
         },
 
         ///
         /// Resets the container to consider its current value the unchanged state.
         /// Call this method for all containers after saving to setup new change-tracking without reloading the entire page.
         ///
-        reset: function (container) {
-            debug("jQuery.liveeditor.reset(container)");
-            var options = container.data('liveeditor-options');
-            container.data('liveeditor-old', undefined);
-            if (options.changedCss)
-                container.removeClass(options.changedCss);
-            containerChanged(container);
-            return container;
+        reset: function (selector) {
+            debug("jQuery.liveeditor.reset(selection)");
+            selector.each(function () {
+                var container = $(this);
+                var oldValue = container.data('liveeditor-old');
+                if (oldValue) {
+                    var newValue = getContainerValue(container);
+                    if (newValue !== oldValue) {
+                        debug("Container value:", newValue, ", liveeditor-old:", oldValue);
+                        container.removeData('liveeditor-old');
+                        var options = container.data('liveeditor-options');
+                        if (options.changedCss)
+                            container.removeClass(options.changedCss);
+                        containerChanged(container);
+                    }
+                }
+            });
+            return selector;
         }
     };
 
@@ -245,10 +253,6 @@
     ///
     /// Private methods
     ///
-    function debug(msg) {
-        //if (settings.debug && console)
-            console.log(msg);
-    }
     function enable(container) {
         if (container.data('liveeditor-enabled') !== true) {
             container
@@ -284,7 +288,7 @@
                 ? container.attr('value') 
                 : container.text(); 
         }
-        debug('getContainerValue() returns: ' + value);
+        debug('getContainerValue() returns:', value);
         return value;
     }
 
@@ -298,6 +302,7 @@
         var success;
 
         var oldValue = container.data('liveeditor-old');
+        debug("liveeditor-old:", oldValue);
 
         //Let the user override the setting of the value to the container if he likes
         var options = container.data('liveeditor-options');
@@ -337,8 +342,7 @@
                 container.addClass(options.changedCss);
         }
         else {
-            debug("The container is unchanged");
-            container.data('liveeditor-old', undefined);
+            debug("The container is unchanged.");
             if (options.changedCss)
                 container.removeClass(options.changedCss);
         }
@@ -373,6 +377,7 @@
         var currentValue = getContainerValue(container);
         if (container.data('liveeditor-old') === undefined) {
             container.data('liveeditor-old', currentValue);
+            debug("Set liveeditor-old to:", currentValue);
         }
 
         var editor = createEditor(container, currentValue);
@@ -407,7 +412,7 @@
                 switch ($.type(select_options)) {
                     case "string": editor.append($(select_options)); break;
                     default:
-                        debug('appending ' + $.type(select_options) + ' options is not supported.');
+                        debug('appending', $.type(select_options), 'options are not supported.');
                         break;
                 }
                 $('option[value="' + value + '"]', editor).prop('selected', true);
@@ -432,15 +437,14 @@
         var container = $(obj);
         var editor = container.children(0);
         if (!editor.length) {
-            debug("Found no editor to hide for the requested container. Aborting!");
             return true; //No editor to hide
         }
         var originalValue = editor.data('liveeditor-original');
         var newValue = getEditorValue(editor);
         var newHtml = getEditorHtml(editor);
-        if (!updateContainer(container, newValue, newHtml))
+        if (!updateContainer(container, newValue, newHtml)) {
             return false;
-
+        }
         var options = container.data('liveeditor-options');
         if (originalValue != newValue) {
             containerChanged(container);
@@ -480,7 +484,7 @@
                 value = editor.val();
         }
 
-        debug('liveeditor.getEditorValue() returns ' + value);
+        debug('liveeditor.getEditorValue() returns:', value);
         return value;
     }
 
@@ -504,7 +508,7 @@
         else
             html = null;
 
-        debug('liveeditor.getEditorHtml() returns ' + html);
+        debug('liveeditor.getEditorHtml() returns:', html);
         return html;
     }
 
@@ -553,5 +557,7 @@
         debug("jQuery.liveeditor initializing DONE");
         return this;
     }
+
+	function debug(args) { if (console) console.log.apply(console, arguments); };
 
 } (jQuery));
