@@ -15,6 +15,7 @@
     var defaultOptions = {
 
         changedCss: 'liveeditor-changed',
+        editingCss: null,
         editorCss: null,
 
         combobox: {
@@ -373,7 +374,9 @@
             container.html(newHtml);
         }
 
-        container.unbind('mouseleave', container_mouseleave);
+        container
+            .unbind('mouseleave', container_mouseleave)
+            .removeClass(options.editingCss);
 
         if (container[0] === options._focusedContainer) {
             debug("Closed the current editing container.");
@@ -429,7 +432,8 @@
         editor.focus(editor_focus);
         container
             .html(editor)
-            .mouseleave(container_mouseleave);
+            .mouseleave(container_mouseleave)
+            .addClass(options.editingCss);
         debug("Added editor to the container");
 
         if ($.isFunction(options.onEditorOpened)) {
