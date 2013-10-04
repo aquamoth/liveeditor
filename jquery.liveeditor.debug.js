@@ -353,8 +353,8 @@
         //Let the user override the setting of the value to the container if he likes
         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
         if ($.isFunction(options.onSetValue)) {
-            debug('Calling onSetValue()');
-            var success = options.onSetValue.call(container, value, html);
+
+            var success = options.onSetValue.call(container, newValue, newHtml);
             if (success === false)
                 return false;
         }
@@ -485,7 +485,7 @@
         debug("liveeditor.commitEditor(obj)");
         var container = $(obj);
         var editor = container.children(0);
-        if (!editor.length) {
+        if (!editor.length || editor.data(LIVEEDITOR_ORIGINAL_STRING) === undefined) {
             return true; //No editor to hide
         }
         var originalValue = editor.data(LIVEEDITOR_ORIGINAL_STRING);

@@ -1,4 +1,4 @@
-liveeditor
+﻿liveeditor
 ==========
 
 jQuery plugin that displays input editors when the user hovers over an editable control.
@@ -9,3 +9,4 @@ The minified version is compressed with UglifyJS using http://jscompress.com/
 0.2.0 - set() and reset() functions operates on selectors instead of single elements. Fixed major bug in reset().
 0.3.0 - get() and serialize() public functions added for simple value retrieval by the page logic.
 0.4.0 - Added editingCss option for improved skinning
+0.5.0 - Fixed bug when calling event onSetValue. Also fixed bug when committing editors the plugin could mistake inner html for being an editor and crash.
