@@ -155,7 +155,9 @@
                     
                 }
                 if (updateContainer(container, value, html)) {
-                    if (value !== originalValue) {
+                    var oldValue = container.data(LIVEEDITOR_OLD_STRING); //Reload the "old" value in case onSetValue() event reset the control
+                    
+                    if (value !== oldValue) {
                         containerChanged(container);
                     }
                 }
@@ -173,10 +175,12 @@
                 var container = $(this);
                 var oldValue = container.data(LIVEEDITOR_OLD_STRING);
                 if (oldValue) {
+                    
                     var newValue = getContainerValue(container);
+                    
                     if (newValue !== oldValue) {
-                        
                         container.removeData(LIVEEDITOR_OLD_STRING);
+                        
                         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
                         if (options.changedCss)
                             container.removeClass(options.changedCss);
@@ -256,35 +260,42 @@
             //Close the current editor
             commitEditor(container);
 
-            if (e.shiftKey) {
-                //Find the previous element in the initialized selector
-                
-                var nextContainer = options._selector.last(); //Used only if we are at the first element in the selector
-                options._selector.each(function () {
-                    if (this === container[0])
-                        return false;
-                    nextContainer = $(this);
-                });
-            } else {
-                //Find the next element in the initialized selector
-                
-                var found = false;
-                nextContainer = options._selector.eq(0);//Used only if we are at the last element in the selector
-                options._selector.each(function () {
-                    if (found) {
+            //Find the next element in the initialized selector
+            
+            var elementList = e.shiftKey ? $(options._selector.get().reverse()) : options._selector;
+            var nextContainer = null;
+            var found = false;
+            do {
+                elementList.each(function () {
+                    if (found && $(this).data(LIVEEDITOR_ENABLED_STRING) === true) {
                         //This is the next element in the selector
                         nextContainer = $(this);
-                        return false;
+                        return false;//Breaks out of the .each() statement
                     }
                     else if (this === container[0]) {
                         //This is the current element in the selector
-                        found = true;
+                        if(found){
+                            //This is the second time we find this element, so we seem to be in an 
+                            // endless loop looking for a control to step to. Abort!
+                            found = false;
+                            return false;//Breaks out of the .each() statement
+                        }
+                        else{
+                            found = true;//Flag the next enabled container as a target
+                        }
                     }
                 });
+                if(!found) {
+                    //Although we looped twice we still didn't find a control to step to, so abort
+                    
+                    break; //Breaks out of the do/while() statement
+                }
             }
-
+            while(nextContainer == null);
             //Open the new editor
-            displayEditor(nextContainer).focus();
+            if(nextContainer !== null) {
+                displayEditor(nextContainer).focus();
+            }
         }
     }
 
@@ -353,7 +364,6 @@
         //Let the user override the setting of the value to the container if he likes
         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
         if ($.isFunction(options.onSetValue)) {
-
             var success = options.onSetValue.call(container, newValue, newHtml);
             if (success === false)
                 return false;
@@ -367,7 +377,10 @@
             }
             else if (container.hasClass(options.checkbox.css)) {
                 container.attr('value', newValue);
-                newHtml = (newValue == options.checkbox.checked.value) ? options.checkbox.checked.html : options.checkbox.unchecked.html;
+                if (newHtml === null)
+                    newHtml = (newValue == options.checkbox.checked.value) 
+                        ? options.checkbox.checked.html 
+                        : options.checkbox.unchecked.html;
             }
             if (newHtml === null || newHtml === undefined)
                 newHtml = newValue;
