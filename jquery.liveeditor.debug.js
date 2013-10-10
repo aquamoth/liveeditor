@@ -142,6 +142,44 @@
             return result.join('&');
         },
 
+        serializeRow: function (row, header) {
+            var thisRow = $(row).get(0);
+            var result = [];
+            $('*', row).filter(function () { return $(this).data(LIVEEDITOR_OPTIONS_STRING); })
+                .each(function () {
+
+                    var walker = $(this);
+                    var value = getContainerValue(walker);
+
+                    var indexes = [];
+                    while(walker.get(0) != thisRow){
+                        indexes.push(walker.index());
+                        walker = walker.parent();
+                        if(walker.index() === -1)
+                            break;//TODO: THROW EXCEPTION HERE
+                    }
+
+                    indexes = indexes.reverse();
+                    walker = header;
+                    for (var i in indexes) {
+                        walker = walker.children().eq(indexes[i]);
+                    }
+
+                    var name = walker.attr('name');
+                    if(name !== undefined){
+                        result.push(
+                            encodeURIComponent(name)
+                            + '='
+                            + encodeURIComponent(value)
+                        );
+                    }
+                    else {
+                        debug("Found no name for editor container.");
+                    }
+                });
+            return result.join('&');
+        },
+
         ///
         /// Changes the value of a container as if the user had edited it with the editor.
         ///
@@ -179,7 +217,7 @@
                     var newValue = getContainerValue(container);
                     debug("Container value:", newValue, ", liveeditor-old:", oldValue);
                     if (newValue !== oldValue) {
-                        container.removeData(LIVEEDITOR_OLD_STRING);
+                        container.data(LIVEEDITOR_OLD_STRING, newValue);
                         debug("new old value: " + container.data(LIVEEDITOR_OLD_STRING));
                         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
                         if (options.changedCss)
@@ -358,9 +396,6 @@
         debug("liveeditor.updateContainer(container, newValue, newHtml)");
         var success;
 
-        var oldValue = container.data(LIVEEDITOR_OLD_STRING);
-        debug("liveeditor-old:", oldValue);
-
         //Let the user override the setting of the value to the container if he likes
         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
         if ($.isFunction(options.onSetValue)) {
@@ -397,6 +432,8 @@
         }
 
         //Update the containers change-status
+        var oldValue = container.data(LIVEEDITOR_OLD_STRING);
+        debug("liveeditor-old:", oldValue);
         if (newValue != oldValue) {
             debug("The container is changed");
             if (options.changedCss)
