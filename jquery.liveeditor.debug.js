@@ -225,6 +225,9 @@
                         containerChanged(container);
                     }
                 }
+                else{
+                    debug("Found no old value. Skipping field.");
+                }
             });
             return selector;
         }
@@ -377,7 +380,7 @@
             debug('Calling onGetValue()');
             value = options.onGetValue.call(container);
         }
-        if (!value) {
+        if (value === undefined) {
             debug('Looking up value from container');
             value = container.hasClass(options.combobox.css) || container.hasClass(options.checkbox.css) 
                 ? container.attr('value') 
@@ -467,7 +470,7 @@
         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
 
         var editor = container.children(0);
-        if (editor.data(LIVEEDITOR_ORIGINAL_STRING)) {
+        if (editor.data(LIVEEDITOR_ORIGINAL_STRING) !== undefined) {
             debug("Using the existing editor for the requested container instead of creating a new.");
             return editor; //Already an editor in this container
         }
@@ -571,7 +574,7 @@
             value = options.onEditorGetValue.call(editor);
         }
 
-        if (!value) {
+        if (value === undefined) {
             debug('Getting editor value');
             if (editor.is(':checkbox'))
                 value = (editor.prop('checked')
@@ -602,10 +605,13 @@
             html = options.onEditorGetHtml.call(editor);
         }
 
-        if (editor.is('select'))
-            html = $(':selected', editor).text();
-        else
-            html = null;
+        if (html === undefined) {
+            debug('Getting editor html');
+			if (editor.is('select'))
+				html = $(':selected', editor).text();
+			else
+				html = null;
+		}
 
         debug('liveeditor.getEditorHtml() returns:', html);
         return html;

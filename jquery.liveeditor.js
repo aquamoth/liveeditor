@@ -225,6 +225,9 @@
                         containerChanged(container);
                     }
                 }
+                else{
+                    
+                }
             });
             return selector;
         }
@@ -377,7 +380,7 @@
             
             value = options.onGetValue.call(container);
         }
-        if (!value) {
+        if (value === undefined) {
             
             value = container.hasClass(options.combobox.css) || container.hasClass(options.checkbox.css) 
                 ? container.attr('value') 
@@ -467,7 +470,7 @@
         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
 
         var editor = container.children(0);
-        if (editor.data(LIVEEDITOR_ORIGINAL_STRING)) {
+        if (editor.data(LIVEEDITOR_ORIGINAL_STRING) !== undefined) {
             
             return editor; //Already an editor in this container
         }
@@ -571,7 +574,7 @@
             value = options.onEditorGetValue.call(editor);
         }
 
-        if (!value) {
+        if (value === undefined) {
             
             if (editor.is(':checkbox'))
                 value = (editor.prop('checked')
@@ -602,10 +605,13 @@
             html = options.onEditorGetHtml.call(editor);
         }
 
-        if (editor.is('select'))
-            html = $(':selected', editor).text();
-        else
-            html = null;
+        if (html === undefined) {
+            
+			if (editor.is('select'))
+				html = $(':selected', editor).text();
+			else
+				html = null;
+		}
 
         
         return html;
