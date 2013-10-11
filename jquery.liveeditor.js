@@ -212,7 +212,7 @@
             selector.each(function () {
                 var container = $(this);
                 var oldValue = container.data(LIVEEDITOR_OLD_STRING);
-                if (oldValue) {
+                if (oldValue !== undefined) {
                     
                     var newValue = getContainerValue(container);
                     
