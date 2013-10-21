@@ -10,7 +10,8 @@
     var LIVEEDITOR_OPTIONS_STRING = 'liveeditor-options';
     var LIVEEDITOR_OLD_STRING = 'liveeditor-old';
     var LIVEEDITOR_ENABLED_STRING = 'liveeditor-enabled';
-    var LIVEEDITOR_ORIGINAL_STRING = 'liveeditor-original';
+    var LIVEEDITOR_ORIGINAL_VALUE_STRING = 'liveeditor-original-value';
+    var LIVEEDITOR_ORIGINAL_HTML_STRING = 'liveeditor-original-html';
 
     var defaultOptions = {
 
@@ -245,7 +246,7 @@
 
     function container_mouseleave() {
         debug("liveeditor.container_mouseleave()");
-        commitEditor(this);//TODO: Should call cancelEditor() instead to make sure the value doesn't change
+        cancelEditor(this);
     }
 
     //Make the editor "sticky" when focused so it doesn't disappear when the mouse is moved from the container
@@ -291,7 +292,7 @@
         else if (keyCode == 27) {       // ESC
             e.preventDefault();
             var container = $(this).parent();
-            commitEditor(container); //TODO: Change to cancelEditor(container);
+            cancelEditor(container);
         }
         else if (keyCode == 9) {    //TAB
             e.preventDefault();
@@ -395,14 +396,16 @@
     /// Implement the events onGetValue() and onSetValue() if the container does not store its value in LiveEditors default way.
     /// Returns true if the value was written successfully and false if the operation was cancelled.
     ///
-    function updateContainer(container, newValue, newHtml) {
+    function updateContainer(container, newValue, newHtml, isCancel) {
         debug("liveeditor.updateContainer(container, newValue, newHtml)");
+        if (isCancel === undefined)
+            isCancel = false;
         var success;
 
         //Let the user override the setting of the value to the container if he likes
         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
         if ($.isFunction(options.onSetValue)) {
-            var success = options.onSetValue.call(container, newValue, newHtml);
+            var success = options.onSetValue.call(container, newValue, newHtml, isCancel);
             if (success === false)
                 return false;
         }
@@ -470,7 +473,7 @@
         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
 
         var editor = container.children(0);
-        if (editor.data(LIVEEDITOR_ORIGINAL_STRING) !== undefined) {
+        if (editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) !== undefined) {
             debug("Using the existing editor for the requested container instead of creating a new.");
             return editor; //Already an editor in this container
         }
@@ -483,6 +486,7 @@
 
         var editor = createEditor(container, currentValue);
         editor.focus(editor_focus);
+        editor.data(LIVEEDITOR_ORIGINAL_HTML_STRING, container.html());
         container
             .html(editor)
             .mouseleave(container_mouseleave)
@@ -525,7 +529,7 @@
             }
         }
 
-        editor.data(LIVEEDITOR_ORIGINAL_STRING, value);
+        editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING, value);
         if (options.editorCss) {
             editor.addClass(options.editorCss);
         }
@@ -538,10 +542,10 @@
         debug("liveeditor.commitEditor(obj)");
         var container = $(obj);
         var editor = container.children(0);
-        if (!editor.length || editor.data(LIVEEDITOR_ORIGINAL_STRING) === undefined) {
+        if (!editor.length || editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) === undefined) {
             return true; //No editor to hide
         }
-        var originalValue = editor.data(LIVEEDITOR_ORIGINAL_STRING);
+        var originalValue = editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING);
         var newValue = getEditorValue(editor);
         var newHtml = getEditorHtml(editor);
         if (!updateContainer(container, newValue, newHtml)) {
@@ -551,6 +555,28 @@
         if (originalValue != newValue) {
             containerChanged(container);
         }
+        //Throw the hidden event
+        if ($.isFunction(options.onEditorClosed)) {
+            debug("Calling onEditorClosed()");
+            options.onEditorClosed.call(container);
+        }
+        return true;
+    }
+
+    //Restore "label" in the container with the original value from the editor
+    function cancelEditor(obj) {
+        debug("liveeditor.cancelEditor(obj)");
+        var container = $(obj);
+        var editor = container.children(0);
+        if (!editor.length || editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) === undefined) {
+            return true; //No editor to hide
+        }
+        var originalValue = editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING);
+        var originalHtml = editor.data(LIVEEDITOR_ORIGINAL_HTML_STRING);
+        if (!updateContainer(container, originalValue, originalHtml, true)) {
+            return false;
+        }
+        var options = container.data(LIVEEDITOR_OPTIONS_STRING);
         //Throw the hidden event
         if ($.isFunction(options.onEditorClosed)) {
             debug("Calling onEditorClosed()");
