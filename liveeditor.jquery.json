@@ -5,10 +5,10 @@
     "keywords": [
         "editor"
     ],
-    "version": "0.5.0",
+    "version": "0.6.0",
     "author": {
         "name": "Mattias Åslund",
-        "url": "https://github.com/aquamoth/liveeditor/blob/0.5.0/AUTHORS.txt"
+        "url": "https://github.com/aquamoth/liveeditor/blob/0.6.0/AUTHORS.txt"
     },
     "maintainers": [
         {
@@ -20,7 +20,7 @@
     "licenses": [
         {
             "type": "MIT",
-            "url": "https://github.com/aquamoth/liveeditor/blob/0.5.0/LICENSE"
+            "url": "https://github.com/aquamoth/liveeditor/blob/0.6.0/LICENSE"
         }
     ],
     "bugs": "https://github.com/aquamoth/liveeditor/issues",
