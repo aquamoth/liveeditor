@@ -44,7 +44,7 @@
 
         onSetValue: null,
         
-        /// Called (after any edit has been closed) when the container has changed its value. Also called by reset().
+        /// Called (after any edit has been closed) when the container has changed its value.
         onChanged: null,
 
         /// Called when an editor is being created to allow developers to implement their own editors for certain containers.
@@ -223,7 +223,6 @@
                         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
                         if (options.changedCss)
                             container.removeClass(options.changedCss);
-                        containerChanged(container);
                     }
                 }
                 else{

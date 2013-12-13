@@ -5,6 +5,7 @@ jQuery plugin that displays input editors when the user hovers over an editable 
 
 The minified version is compressed with UglifyJS using http://jscompress.com/
 
+	0.6.1 - $.liveeditor.reset() no longer calls onChanged(). It was a bad design decision that caused more problems than it solved.
     0.6.0 - Editor now cancels changes when hovering and leaving an editor or pressing ESC key, 
                rather than committing the old value. Important for comboboxes with missing values for example.
             Also added method $.liveeditor.serializeRow() for improved serialization of the special case of datagrids.
