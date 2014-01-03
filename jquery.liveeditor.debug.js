@@ -197,7 +197,7 @@
             selector.each(function () {
                 var container = $(this);
                 var originalValue = getContainerValue(container);
-                if (container.data(LIVEEDITOR_OLD_STRING) === undefined) {
+                if (container.data(LIVEEDITOR_OLD_STRING) == null) {
                     container.data(LIVEEDITOR_OLD_STRING, originalValue);
                     debug("Set liveeditor-old to:", originalValue);
                 }
@@ -221,7 +221,7 @@
             selector.each(function () {
                 var container = $(this);
                 var oldValue = container.data(LIVEEDITOR_OLD_STRING);
-                if (oldValue !== undefined) {
+                if (oldValue != null) {
                     debug("Container has old value");
                     var newValue = getContainerValue(container);
                     debug("Container value:", newValue, ", liveeditor-old:", oldValue);
@@ -394,7 +394,7 @@
         if (value === undefined) {
             debug('Looking up value from container');
             value = container.hasClass(options.combobox.css) || container.hasClass(options.checkbox.css)
-                ? container.attr('value')
+                ? (container.attr('value') || '')
                 : container.text();
         }
         debug('getContainerValue() returns:', value);
@@ -433,7 +433,7 @@
                         ? options.checkbox.checked.html 
                         : options.checkbox.unchecked.html;
             }
-            if (newHtml === null || newHtml === undefined)
+            if (newHtml == null)
                 newHtml = newValue;
             container.html(newHtml);
         }
@@ -483,13 +483,13 @@
         var options = container.data(LIVEEDITOR_OPTIONS_STRING);
 
         var editor = container.children(0);
-        if (editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) !== undefined) {
+        if (editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) != null) {
             debug("Using the existing editor for the requested container instead of creating a new.");
             return editor; //Already an editor in this container
         }
 
         var currentValue = getContainerValue(container);
-        if (container.data(LIVEEDITOR_OLD_STRING) === undefined) {
+        if (container.data(LIVEEDITOR_OLD_STRING) == null) {
             container.data(LIVEEDITOR_OLD_STRING, currentValue);
             debug("Set liveeditor-old to:", currentValue);
         }
@@ -552,7 +552,7 @@
         debug("liveeditor.commitEditor(obj)");
         var container = $(obj);
         var editor = container.children(0);
-        if (!editor.length || editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) === undefined) {
+        if (!editor.length || editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) == null) {
             return true; //No editor to hide
         }
         var originalValue = editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING);
@@ -578,7 +578,7 @@
         debug("liveeditor.cancelEditor(obj)");
         var container = $(obj);
         var editor = container.children(0);
-        if (!editor.length || editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) === undefined) {
+        if (!editor.length || editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) == null) {
             return true; //No editor to hide
         }
         var originalValue = editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING);
