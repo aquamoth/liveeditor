@@ -78,6 +78,14 @@
         ///
         /// Enables editing for an unregistered or previously disabled container.
         ///
+        isEnabled: function (container) {
+            
+            return isEnabled(container);
+        },
+
+        ///
+        /// Enables editing for an unregistered or previously disabled container.
+        ///
         enable: function (container) {
             
             return enable(container);
@@ -308,7 +316,7 @@
             var found = false;
             do {
                 elementList.each(function () {
-                    if (found && $(this).data(LIVEEDITOR_ENABLED_STRING) === true) {
+                    if (found && isEnabled($(this))) {
                         //This is the next element in the selector
                         nextContainer = $(this);
                         return false;//Breaks out of the .each() statement
@@ -351,8 +359,11 @@
     ///
     /// Private methods
     ///
+    function isEnabled(container) {
+        return container.data(LIVEEDITOR_ENABLED_STRING) === true;
+    }
     function enable(container) {
-        if (container.data(LIVEEDITOR_ENABLED_STRING) !== true) {
+        if (!isEnabled(container)) {
             container
                 .data(LIVEEDITOR_ENABLED_STRING, true)
                 .mouseenter(container_mouseenter);
@@ -360,7 +371,7 @@
         return container;
     }
     function disable(container) {
-        if (container.data(LIVEEDITOR_ENABLED_STRING) === true) {
+        if (isEnabled(container)) {
             container
                 .data(LIVEEDITOR_ENABLED_STRING, false)
                 .unbind('mouseenter', container_mouseenter);
@@ -382,9 +393,9 @@
         }
         if (value === undefined) {
             
-            value = container.hasClass(options.combobox.css) || container.hasClass(options.checkbox.css) 
-                ? container.attr('value') 
-                : container.text(); 
+            value = container.hasClass(options.combobox.css) || container.hasClass(options.checkbox.css)
+                ? container.attr('value')
+                : container.text();
         }
         
         return value;
