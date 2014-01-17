@@ -15,6 +15,8 @@
 
     var defaultOptions = {
 
+        fillControls: false,
+
         changedCss: 'liveeditor-changed',
         editingCss: null,
         editorCss: null,
@@ -661,10 +663,36 @@
 
 
 
-    //called on the native object directly, wrap with $(obj) if needed.
-    function initializeObject(obj, options) {
+    //called on the native object directly, wrap with $(container) if needed.
+    function initializeObject(container, options) {
         //assign the options to the object instance.
-        $(obj).data(LIVEEDITOR_OPTIONS_STRING, options);
+        var $container = $(container);
+        $container.data(LIVEEDITOR_OPTIONS_STRING, options);
+
+        if (options.fillControls) {
+            //Initialize the controls with the html that corresponds to their values
+            if ($container.hasClass(options.combobox.css)) {
+                var value = getContainerValue($container);
+                $container.data(LIVEEDITOR_OLD_STRING, value);
+
+                var select_options = options.onEditorOptions.call(container);
+                switch ($.type(select_options)) {
+                    case "string":
+                        var option = $('select').append(select_options).find('option[value="' + value + '"]');
+                        var html = option.html();
+                        updateContainer($container, value, html, true);
+                        break;
+                    default:
+                        debug('appending', $.type(select_options), 'options are not supported.');
+                        break;
+                }
+            }
+            else if ($container.hasClass(options.checkbox.css)) {
+                var value = getContainerValue($container);
+                $container.data(LIVEEDITOR_OLD_STRING, value);
+                updateContainer($container, value, null, true);
+            }
+        }
 
         //do other initialization tasks on the individual item here...
     }
