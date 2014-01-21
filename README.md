@@ -5,11 +5,12 @@ jQuery plugin that displays input editors when the user hovers over an editable 
 
 The latest minified version is compressed with YUI Compressor 2.4.8 using http://refresh-sf.com/yui/
 
-	0.8.0 - When LiveEditor is initialized it can populate checkboxes and comboboxes with their correct html based
-				on the objects value property. Set the option fillControls = true to enable this feature.
-	0.7.0 - Added function $.liveeditor.isEnabled() to test if a certain field is enabled or disabled.
-			Also fixed incompatibilities with jQuery 1.10.2. Previous version was just tested on jQuery 1.7.1
-	0.6.1 - $.liveeditor.reset() no longer calls onChanged(). It was a bad design decision that caused more problems than it solved.
+    0.8.1 - Fixed bug when filling options in comboboxes.
+    0.8.0 - When LiveEditor is initialized it can populate checkboxes and comboboxes with their correct html based
+                on the objects value property. Set the option fillControls = true to enable this feature.
+    0.7.0 - Added function $.liveeditor.isEnabled() to test if a certain field is enabled or disabled.
+                Also fixed incompatibilities with jQuery 1.10.2. Previous version was just tested on jQuery 1.7.1
+    0.6.1 - $.liveeditor.reset() no longer calls onChanged(). It was a bad design decision that caused more problems than it solved.
     0.6.0 - Editor now cancels changes when hovering and leaving an editor or pressing ESC key, 
                rather than committing the old value. Important for comboboxes with missing values for example.
             Also added method $.liveeditor.serializeRow() for improved serialization of the special case of datagrids.

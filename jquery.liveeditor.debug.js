@@ -678,7 +678,7 @@
                 var select_options = options.onEditorOptions.call(container);
                 switch ($.type(select_options)) {
                     case "string":
-                        var option = $('select').append(select_options).find('option[value="' + value + '"]');
+                        var option = $('<select>').append(select_options).find('option[value="' + value + '"]');
                         var html = option.html();
                         updateContainer($container, value, html, true);
                         break;
