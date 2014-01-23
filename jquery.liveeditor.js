@@ -153,7 +153,7 @@
             return result.join('&');
         },
 
-        serializeRow: function (row, header) {
+        serializeRow: function (row, header, rowIndex) {
             var thisRow = $(row).get(0);
             var result = [];
             $('*', row).filter(function () { return $(this).data(LIVEEDITOR_OPTIONS_STRING); })
@@ -178,11 +178,10 @@
 
                     var name = walker.attr('name');
                     if(name !== undefined){
-                        result.push(
-                            encodeURIComponent(name)
-                            + '='
-                            + encodeURIComponent(value)
-                        );
+                        if (rowIndex !== undefined) {
+                            name = name.replace("[]", "[" + rowIndex + "]");
+                        }
+                        result.push(name + '=' + encodeURIComponent(value));
                     }
                     else {
                         
