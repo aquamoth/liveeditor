@@ -5,6 +5,7 @@ jQuery plugin that displays input editors when the user hovers over an editable 
 
 The latest minified version is compressed with YUI Compressor 2.4.8 using http://refresh-sf.com/yui/
 
+    0.9.1 - Minor bugfix when user tries to fetch value from a field with an open editor.
     0.9.0 - $.liveeditor.serializeRow(row, headerRow, index) injects the index into the controls name if needed, 
                 ie. "item[].id" => "item[0].id"
     0.8.1 - Fixed bug when filling options in comboboxes.

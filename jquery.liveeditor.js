@@ -119,8 +119,16 @@
             
             var values = [];
             selector.each(function () {
-                var value = getContainerValue($(this));
-                values.push(value);
+                var container = $(this);
+                var editor = container.children(0);
+                if (!editor.length || editor.data(LIVEEDITOR_ORIGINAL_VALUE_STRING) == null) {
+                    //No editor
+                    values.push(getContainerValue(container));
+                }
+                else {
+                    //Editor open
+                    values.push(getEditorValue(editor));
+                }
             });
             return values.length === 1 ? values[0] : values;
         },
