@@ -135,10 +135,10 @@
 
         ///
         /// Serializes all liveeditor fields in a selector to a postable string, just like $.serialize() works on forms.
-        /// Any control not registered to liveeditor are ignored. Liveeditor-fields without name attribute are also ignored.
+        /// Any control not registered to liveeditor are ignored. Liveeditor-fields without data-name or name attribute are also ignored.
         /// Unlike $.serialize() this function includes unchecked checkboxes for now. This may change in the future.
         /// For the special case of serializing a single row in a liveeditor table a second selector with headers can be included,
-        /// in which case the name will be taken from the column header if it is not found on the field itself.
+        /// in which case the data-name or name will be taken from the column header if it is not found on the field itself.
         ///
         serialize: function (selector, namesSelector) {
             
@@ -146,12 +146,12 @@
             selector
                 .filter(function () {
                     var that = $(this);
-                    return (namesSelector || that.is('[name]'))
+                    return (namesSelector || that.is('[data-name]') || that.is('[name]'))
                         && that.data(LIVEEDITOR_OPTIONS_STRING);
                 })
                 .each(function () {
                     var that = $(this);
-                    var name = that.attr('name') || namesSelector.eq(that.index()).attr('name');
+                    var name = that.attr('data-name') || that.attr('name') || namesSelector.eq(that.index()).attr('data-name') || namesSelector.eq(that.index()).attr('name');
                     result.push(
                         encodeURIComponent(name)
                         + '='
@@ -167,35 +167,32 @@
             $('*', row).filter(function () { return $(this).data(LIVEEDITOR_OPTIONS_STRING); })
                 .each(function () {
 
-                    var walker = $(this);
-                    var value = getContainerValue(walker);
-
-                    var indexes = [];
-                    while(walker.get(0) != thisRow){
-                        indexes.push(walker.index());
-                        walker = walker.parent();
-                        if(walker.index() === -1)
-                            break;//TODO: THROW EXCEPTION HERE
-                    }
-
-                    indexes = indexes.reverse();
-                    walker = header;
-                    for (var i in indexes) {
-                        walker = walker.children().eq(indexes[i]);
-                    }
-
-                    var name = walker.attr('name');
-                    if(name !== undefined){
+                    var indexes = getIndexes(row, this);
+                    var name = getName(header, indexes);
+                    if (name !== undefined) {
                         if (rowIndex !== undefined) {
                             name = name.replace("[]", "[" + rowIndex + "]");
                         }
+                        var value = getContainerValue($(this));
                         result.push(name + '=' + encodeURIComponent(value));
                     }
                     else {
-                        
+                        var msg = 'FAILED to get data-name for row editor at index: ' + indexes.join(',') + '!';
+                        if (console) { console.log(msg) }
+                        else { alert(msg); }
                     }
                 });
             return result.join('&');
+        },
+
+        getIndexes: function (parentElement, childElement) {
+            return getIndexes(parentElement, childElement);
+        },
+        followIndexes: function (parentElement, indexes) {
+            return followIndexes(parentElement, indexes);
+        },
+        getName: function(parentElement, indexes){
+            return getName(parentElement, indexes);
         },
 
         ///
@@ -437,7 +434,7 @@
             }
             else if (container.hasClass(options.checkbox.css)) {
                 container.attr('value', newValue);
-                if (newHtml === null)
+                if (newHtml == null)
                     newHtml = (newValue == options.checkbox.checked.value) 
                         ? options.checkbox.checked.html 
                         : options.checkbox.unchecked.html;
@@ -479,6 +476,44 @@
             options.onChanged.call(container);
         }
     }
+
+    ///
+    /// Method called to get the index tree between a parent and nested child element.
+    /// This method is meant to be used together with getName().
+    ///
+    function getIndexes(thisRow, field) {
+        var walker = $(field);
+        var indexes = [];
+        while (walker.get(0) != thisRow) {
+            indexes.push(walker.index());
+            walker = walker.parent();
+            if (walker.index() === -1)
+                throw 'thisRow is not a parent of field!';
+        }
+        indexes = indexes.reverse();
+        return indexes;
+    };
+
+    ///
+    /// Method follows the indexes created by getIndexes() and returns a child node below the header
+    ///
+    function followIndexes(header, indexes) {
+        var walker = header;
+        for (var i in indexes) {
+            walker = walker.children().eq(indexes[i]);
+        }
+        return walker;
+    };
+
+    ///
+    /// Method called to get the data-name value for a nested child of a header element
+    /// This method is meant to be used together with getIndexes().
+    ///
+    function getName(header, indexes) {
+        var walker = followIndexes(header, indexes);
+        var name = walker.attr('data-name') || walker.attr('name');
+        return name;
+    };
 
 
 
